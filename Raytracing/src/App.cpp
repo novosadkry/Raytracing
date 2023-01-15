@@ -1,38 +1,60 @@
 #include "Walnut/Application.h"
+#include "Walnut/EntryPoint.h"
 #include "Walnut/Image.h"
+#include "Renderer.h"
 
-class ExampleLayer : public Walnut::Layer
+using namespace Walnut;
+
+class ViewportLayer : public Layer
 {
 public:
-	void OnUIRender() override
-	{
-		ImGui::Begin("Hello");
-		ImGui::Button("Button");
-		ImGui::End();
+    void OnUIRender() override
+    {
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+        ImGui::Begin("Viewport");
 
-		ImGui::ShowDemoWindow();
-	}
+        const uint32_t viewportWidth = ImGui::GetContentRegionAvail().x;
+        const uint32_t viewportHeight = ImGui::GetContentRegionAvail().y;
+
+        if (const auto result = m_Renderer.GetResultImage())
+        {
+            ImGui::Image(
+                result->GetDescriptorSet(),
+                ImVec2 {
+                    static_cast<float>(result->GetWidth()),
+                    static_cast<float>(result->GetHeight())
+                },
+                ImVec2(0, 1), ImVec2(1, 0)
+            );
+        }
+
+        ImGui::End();
+        ImGui::PopStyleVar();
+
+        ImGui::Begin("Render Info");
+
+        if (ImGui::Button("Render"))
+        {
+            m_Renderer.OnResize(viewportWidth, viewportHeight);
+            m_Renderer.Render();
+        }
+
+        ImGui::Text("Last render: %.3f ms", m_Renderer.TimeElapsed());
+
+        ImGui::End();
+    }
+
+private:
+    Renderer m_Renderer;
 };
 
-Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
+Application* Walnut::CreateApplication(int argc, char** argv)
 {
-	ApplicationSpecification spec;
-	spec.Name = "Walnut Example";
+    ApplicationSpecification spec;
+    spec.Name = "Raytracing";
 
-	auto* app = new Application(spec);
-	app->PushLayer<ExampleLayer>();
-	app->SetMenubarCallback([app]()
-	{
-		if (ImGui::BeginMenu("File"))
-		{
-			if (ImGui::MenuItem("Exit"))
-			{
-				app->Close();
-			}
+    auto* app = new Application(spec);
+    app->PushLayer<ViewportLayer>();
 
-			ImGui::EndMenu();
-		}
-	});
-
-	return app;
+    return app;
 }
