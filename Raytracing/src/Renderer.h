@@ -11,7 +11,7 @@ class Renderer
 public:
     void Render();
     void OnResize(uint32_t width, uint32_t height);
-    glm::vec3 PerPixel(glm::vec2 coord);
+    glm::vec4 PerPixel(glm::vec2 coord);
 
     std::shared_ptr<Walnut::Image> GetResultImage() const;
 
